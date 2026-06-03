@@ -186,7 +186,8 @@ export function Registration() {
     };
 
     const merchantId = import.meta.env.VITE_PAIEMENTPRO_MERCHANT_ID || "PP-F92248";
-    const baseUrl = window.location.origin + window.location.pathname;
+    const siteUrl = (import.meta.env.VITE_APP_URL || window.location.origin).replace(/\/$/, "");
+    const baseUrl = `${siteUrl}${window.location.pathname}`;
 
     const payload = {
       merchantId,
