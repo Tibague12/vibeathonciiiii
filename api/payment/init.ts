@@ -1,5 +1,5 @@
 const PAIEMENTPRO_INIT_URL =
-  'https://www.paiementpro.net/webservice/onlinepayment/js/initialize/initialize.php';
+  "https://www.paiementpro.net/webservice/onlinepayment/init/curl-init.php";
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
@@ -18,10 +18,17 @@ export default async function handler(req: any, res: any) {
       body: JSON.stringify(payload),
     });
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch (parseError: any) {
+      const text = await response.text();
+      data = { success: false, error: 'Invalid response from Paiement Pro', details: text || parseError?.message };
+    }
+
     res.status(response.ok ? 200 : 502).json(data);
-  } catch (err) {
+  } catch (err: any) {
     console.error('PaiementPro proxy error:', err);
-    res.status(502).json({ success: false, error: 'Proxy error' });
+    res.status(502).json({ success: false, error: err?.message || 'Proxy error' });
   }
 }

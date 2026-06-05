@@ -182,12 +182,18 @@ export function Registration() {
     } catch (_) {}
 
     const channelMap: Record<string, string> = {
-      wave: "WAVE", orange: "ORANGE", mtn: "MTN", card: "CARD", all: "",
+      wave: "WAVECI", orange: "OMCIV2", mtn: "MOMOCI", card: "CARD", all: "",
     };
 
     const merchantId = import.meta.env.VITE_PAIEMENTPRO_MERCHANT_ID || "PP-F92248";
-    const siteUrl = (import.meta.env.VITE_APP_URL || window.location.origin).replace(/\/$/, "");
+    const envAppUrl = import.meta.env.VITE_APP_URL;
+    const siteUrl = envAppUrl && envAppUrl.startsWith("http") && !envAppUrl.includes("MY_APP_URL")
+      ? envAppUrl.replace(/\/$/, "")
+      : window.location.origin.replace(/\/$/, "");
     const baseUrl = `${siteUrl}${window.location.pathname}`;
+
+    const [firstName, ...lastNameParts] = (formData.nom || "Participant").split(" ");
+    const lastName = lastNameParts.join(" ") || firstName;
 
     const payload = {
       merchantId,
@@ -197,14 +203,12 @@ export function Registration() {
       countryCurrencyCode: "952",
       referenceNumber: `VB-${Date.now()}`,
       customerEmail: formData.email,
-      customerFirstName: formData.nom || "Participant",
-      customerLastname: formData.nom || "Participant",
+      customerFirstName: firstName,
+      customerLastname: lastName,
       customerPhoneNumber: formData.tel || "0000000000",
       returnURL: `${baseUrl}?payment=success&plan=${activeForm}&name=${encodeURIComponent(formData.nom)}`,
       notificationURL: `${baseUrl}?payment=success&plan=${activeForm}&name=${encodeURIComponent(formData.nom)}`,
       returnContext: "",
-      url: "",
-      success: false,
     };
 
     try {
@@ -214,11 +218,11 @@ export function Registration() {
         body: JSON.stringify(payload),
       });
       const data = await response.json();
-      if (data.success && data.url) {
+      if (response.ok && data.success && data.url) {
         window.location.href = data.url;
       } else {
         console.error("PaiementPro response:", data);
-        alert("Erreur lors de l'initialisation du paiement. Veuillez réessayer.");
+        alert(data.error || data.message || "Erreur lors de l'initialisation du paiement. Veuillez réessayer.");
         setIsProcessing(false);
       }
     } catch (err) {
